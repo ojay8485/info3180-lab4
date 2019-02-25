@@ -8,7 +8,8 @@ import os
 from app import app
 from flask import render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.utils import secure_filename
-
+from forms import UploadForm
+import wtforms
 
 ###
 # Routing for your application.
@@ -28,20 +29,43 @@ def about():
 
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
+    
     if not session.get('logged_in'):
         abort(401)
 
-    # Instantiate your form class
+    uploadform = UploadForm()
 
     # Validate file upload on submit
     if request.method == 'POST':
-        # Get file data and save to your uploads folder
+            file = request.files['file']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join('./app/static/uploads',filename))
+            flash('File Saved', 'success')
+            return redirect(url_for('home'))
+    return render_template('upload.html',form=uploadform)
 
-        flash('File Saved', 'success')
-        return redirect(url_for('home'))
-
-    return render_template('upload.html')
-
+def get_uploaded_image():
+    rootdir = os.getcwd()
+    items = []
+    for subdir,dirs,files in os.walk(rootdir+'/app/static/uploads'):
+        for file in files:
+            items.append(file)
+    
+    for i in range(0,len(items)-1):
+        if items[i] == '.gitkeep':
+            del items[i]
+            
+    return items
+    
+@app.route('/files')
+def files():
+    if not session.get('logged_in'):
+        abort(401)
+    
+    items = get_uploaded_image()  
+    
+    return render_template('files.html',items=items)
+    
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -53,7 +77,7 @@ def login():
             session['logged_in'] = True
             
             flash('You were logged in', 'success')
-            return redirect(url_for('upload'))
+            redirect(url_for('upload'))
     return render_template('login.html', error=error)
 
 

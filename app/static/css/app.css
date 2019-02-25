@@ -1,3 +1,14 @@
 body {
     padding-top: 5rem;
 }
+
+.container li{
+    display:inline;
+}
+
+.images{
+    width:30%;
+    height:300px;
+    padding:5px;
+    display:inline;
+}
